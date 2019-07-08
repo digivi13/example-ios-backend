@@ -37,6 +37,31 @@ post '/ephemeral_keys' do
   key.to_json
 end
 
+post '/charge' do
+  #5
+  payload = params
+  if request.content_type.include? 'application/json' and params.empty?
+    payload = indifferent_params(JSON.parse(request.body.read))
+  end
+
+  begin
+    #6
+    charge = Stripe::Charge.create(
+      :amount => payload[:amount],
+      :currency => payload[:currency],
+      :source => payload[:token],
+      :description => payload[:description]
+    )
+    #7
+    rescue Stripe::StripeError => e
+    status 402
+    return "Error creating charge: #{e.message}"
+  end
+  #8
+  status 200
+  return "Charge successfully created"
+end
+
 post '/capture_payment' do
   authenticate!
   # Get the credit card details submitted
